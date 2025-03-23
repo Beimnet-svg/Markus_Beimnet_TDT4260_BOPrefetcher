@@ -102,6 +102,15 @@ TDTPrefetcher::BestOffsetPrefetcher::testRecentRequest(Addr addrRequest, int tes
   }
 }
 
+//Reset the scores of the offsettable
+void
+TDTPrefetcher::BestOffsetPrefetcher::resetOffsetTable()
+{
+    for(auto &i: offsetTable){
+        i.second = 0;
+    }
+}
+
 void
 TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
                                  std::vector<AddrPriority> &addresses,
