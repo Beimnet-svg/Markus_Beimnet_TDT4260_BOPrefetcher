@@ -124,7 +124,10 @@ class BestOffsetPrefetcher
         //int offsetTableSize; 
         int maxScore;
         int maxRound;
+        int currentRound;
+        int d;
         int D;
+
 
         public:
             BestOffsetPrefetcher(int recentRequestsSize, int offsetTableSize)
@@ -133,6 +136,7 @@ class BestOffsetPrefetcher
                 maxScore(31),
                 maxRound(8),
                 D(1)
+                currentRound(0);
              {
                 fillOffsetTable();
              }
