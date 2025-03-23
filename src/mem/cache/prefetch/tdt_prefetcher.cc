@@ -64,6 +64,7 @@ void
 TDTPrefetcher::notifyFill(const CacheAccessProbeArg &arg)
 {
     //A cache line has been filled in
+  addRecentRequest(arg.pkt->getAddr());
 }
 
 void
@@ -81,30 +82,24 @@ TDTPrefetcher::BestOffsetPrefetcher::fillOffsetTable()
 }
 
 void
-TDTPrefetcher::BestOffsetPrefetcher::addRecentRequest(Addr addr, Tick time)
+TDTPrefetcher::BestOffsetPrefetcher::addRecentRequest(Addr addr)
 {
     if(recentRequests.size() >= maxRecentRequests)
     {
         recentRequests.pop_front();
     }
-    recentRequests.push_back({addr, time});
+    recentRequests.push_back({addr});
 }
 
 void
-TDTPrefetcher::BestOffsetPrefetcher::updateScores(Addr addr)
+TDTPrefetcher::BestOffsetPrefetcher::testRecentRequest(Addr addrRequest, int testOffset)
 {
-    for (auto &entry : offsetTable) {
-        entry.second = 0;
-    }
-
-    for (auto &request : recentRequests) {
-        Addr diff = request.first - addr;
-        for (auto &entry : offsetTable) {
-            if (diff % entry.first == 0) {
-                entry.second++;
-            }
-        }
-    }
+  int testAdress = addrRequest - testOffset; // X -d
+  for(auto &i: recentRequests){
+      if(testAdress == i.addr){
+        offsetTable[testOffset]++;
+      }
+  }
 }
 
 void
@@ -129,7 +124,7 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 
     // Currently implemented prefetching algorithm: Next line prefetching
     // TODO: Implement something better!
-    addresses.push_back(AddrPriority(access_addr + blkSize, 0));
+    addresses.push_back(AddrPriority(access_addr + (D*blksize), 0));
 
     // Can safely be ignored
     // Get matching storage of entries

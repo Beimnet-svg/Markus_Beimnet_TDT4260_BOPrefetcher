@@ -113,36 +113,35 @@ class BestOffsetPrefetcher
         struct RecentRequest
         {
             Addr addr;
-            Tick time;
+            
         };
 
    
 
         std::vector<RecentRequest> recentRequests;
         std::unordered_map<int, int> offsetTable; //offset, score
-        int recentRequestSize; //Size of the recentRequents table
-        int offsetTableSize; //Size of the offset Table
+        int recentRequestSize; 
+        //int offsetTableSize; 
         int maxScore;
         int maxRound;
+        int D;
 
         public:
-            BestOffsetPrefetcher(int maxRecentRequests, int maxOffsets)
-             :   maxRecentRequests(maxRecentRequests), maxOffsets(maxOffsets)
-<<<<<<< HEAD
+            BestOffsetPrefetcher(int recentRequestsSize, int offsetTableSize)
+             :  recentRequestSize(255),
+                //offsetTableSize()
+                maxScore(31),
+                maxRound(8),
+                D(1)
              {
                 fillOffsetTable();
              }
              void fillOffsetTable();
-             void addRecentRequest(Addr addr, Tick time);
+             void addRecentRequest(Addr addr);
+             void testRecentRequest(Addr addrRequest, int testOffset);
              void updateOffsetScore(int offset, int score);
-             int getBestOffset() const;
+             int getBestOffset() const {return D};
              void printOffsets() const; //Method to print offsets
-=======
-             {}
-             void addRecentRequest(Addr addr, Tick time);
-             void updateOffsetScore(int offset, int score);
-             int getBestOffset() const;
->>>>>>> 395c4f7123 (Best_offset_prefetcher)
 
 };
 
