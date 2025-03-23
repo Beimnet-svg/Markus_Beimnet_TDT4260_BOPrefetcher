@@ -49,7 +49,7 @@ class TDTPrefetcher : public Queued
 {
 
   protected:
-
+BestOffsetPrefetcher BestOffsetPrefetcher;
     const struct PCTableInfo
     {
         const int assoc;
@@ -113,20 +113,17 @@ class BestOffsetPrefetcher
         struct RecentRequest
         {
             Addr addr;
-            Tick time;
+    // We need to use t checking if enough time has passed since last time you handled an event. You can check time by accessing an object that has the
+//curCycle function and then subtracting by last stored cycle.
         };
 
-        struct OffsetScore
-        {
-            int offset;
-            int score;
-        };
 
         std::vector<RecentRequest> recentRequests;
-        std::unordered_map<int, OffsetScore> offsetTable;
-        int maxRecentRequests; //Size of the recentRequents table
-        int maxOffsets; //Size of the offset Table
+        std::unordered_map<int, int> offsetTable;
+        int recentRequestsSize; //Size of the recentRequents table
+        int offsetSize; //Size of the offset Table
         int maxScore;
+        int maxRound;
 
         public:
             BestOffsetPrefetcher(int maxRecentRequests, int maxOffsets)
