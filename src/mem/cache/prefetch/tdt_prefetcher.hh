@@ -76,6 +76,8 @@ class TDTPrefetcher : public Queued
         TDTEntry(TagExtractor ext);
         void invalidate() override;
 
+        
+
         Addr lastAddr = 0;
 
 
@@ -103,7 +105,42 @@ class TDTPrefetcher : public Queued
 
 };
 
-} //namespace prefetch
-} //namespace gem5
+//Implementation of Best Offset Prefetcher
+//Here we will create a class that will be used to include Recent requests table
+class BestOffsetPrefetcher
+{
+    private:
+        struct RecentRequest
+        {
+            Addr addr;
+            Tick time;
+        };
+
+        struct OffsetScore
+        {
+            int offset;
+            int score;
+        };
+
+        std::vector<RecentRequest> recentRequests;
+        std::unordered_map<int, OffsetScore> offsetTable;
+        int maxRecentRequests; //Size of the recentRequents table
+        int maxOffsets; //Size of the offset Table
+        int maxScore;
+
+        public:
+            BestOffsetPrefetcher(int maxRecentRequests, int maxOffsets)
+             :   maxRecentRequests(maxRecentRequests), maxOffsets(maxOffsets)
+             {
+                fillOffsetTable();
+             }
+             void fillOffsetTable();
+             void addRecentRequest(Addr addr, Tick time);
+             void updateOffsetScore(int offset, int score);
+             int getBestOffset() const;
+             void printOffsets() const; //Method to print offsets
+
+};
+
 
 #endif //_MEM_CACHE_PREFETCH_TDT_PREFETCHER_HH__

@@ -59,6 +59,7 @@ TDTPrefetcher::allocateNewContext(int context)
     return *(pcTables[context]);
 }
 
+
 void
 TDTPrefetcher::notifyFill(const CacheAccessProbeArg &arg)
 {
@@ -66,6 +67,47 @@ TDTPrefetcher::notifyFill(const CacheAccessProbeArg &arg)
 }
 
 void
+TDTPrefetcher::BestOffsetPrefetcher::fillOffsetTable()
+{
+    for (int i = 1; i <= 256; ++i) {
+        int num = i;
+        while (num % 2 == 0) num /= 2;
+        while (num % 3 == 0) num /= 3;
+        while (num % 5 == 0) num /= 5;
+        if (num == 1) {
+            offsetTable[i] = {i, 0};
+        }
+    }
+}
+
+void
+TDTPrefetcher::BestOffsetPrefetcher::addRecentRequest(Addr addr, Tick time)
+{
+    if(recentRequests.size() >= maxRecentRequests)
+    {
+        recentRequests.pop_front();
+    }
+    recentRequests.push_back({addr, time});
+}
+
+void
+TDTPrefetcher::BestOffsetPrefetcher::updateScores(Addr addr)
+{
+    for (auto &entry : offsetTable) {
+        entry.second = 0;
+    }
+
+    for (auto &request : recentRequests) {
+        Addr diff = request.first - addr;
+        for (auto &entry : offsetTable) {
+            if (diff % entry.first == 0) {
+                entry.second++;
+            }
+        }
+    }
+}
+
+
 TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
                                  std::vector<AddrPriority> &addresses,
                                     const CacheAccessor &cache)
@@ -77,11 +119,13 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
 
     // access_addr is the memory address (of the cache line) requested
     Addr access_addr = pfi.getAddr();
+    
     // access pc is the pc of the inst that requests the cache line
     Addr access_pc = pfi.getPC();
 
     // context can be ignored
     int context = 0;
+    int D = 1;
 
     // Currently implemented prefetching algorithm: Next line prefetching
     // TODO: Implement something better!
@@ -100,6 +144,8 @@ TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
     if (entry != nullptr) {
         // There is an entry for this PC
         // You might want to update information for this entry
+
+        
     } else {
         // No entry for this PC
         // You might want to make an entry for this PC
