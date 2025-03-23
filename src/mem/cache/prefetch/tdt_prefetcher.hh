@@ -131,6 +131,7 @@ class BestOffsetPrefetcher
         public:
             BestOffsetPrefetcher(int maxRecentRequests, int maxOffsets)
              :   maxRecentRequests(maxRecentRequests), maxOffsets(maxOffsets)
+<<<<<<< HEAD
              {
                 fillOffsetTable();
              }
@@ -139,6 +140,12 @@ class BestOffsetPrefetcher
              void updateOffsetScore(int offset, int score);
              int getBestOffset() const;
              void printOffsets() const; //Method to print offsets
+=======
+             {}
+             void addRecentRequest(Addr addr, Tick time);
+             void updateOffsetScore(int offset, int score);
+             int getBestOffset() const;
+>>>>>>> 395c4f7123 (Best_offset_prefetcher)
 
 };
 

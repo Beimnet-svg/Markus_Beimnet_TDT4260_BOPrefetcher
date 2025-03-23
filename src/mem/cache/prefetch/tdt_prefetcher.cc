@@ -67,6 +67,7 @@ TDTPrefetcher::notifyFill(const CacheAccessProbeArg &arg)
 }
 
 void
+<<<<<<< HEAD
 TDTPrefetcher::BestOffsetPrefetcher::fillOffsetTable()
 {
     for (int i = 1; i <= 256; ++i) {
@@ -81,6 +82,8 @@ TDTPrefetcher::BestOffsetPrefetcher::fillOffsetTable()
 }
 
 void
+=======
+>>>>>>> 395c4f7123 (Best_offset_prefetcher)
 TDTPrefetcher::BestOffsetPrefetcher::addRecentRequest(Addr addr, Tick time)
 {
     if(recentRequests.size() >= maxRecentRequests)
@@ -89,6 +92,7 @@ TDTPrefetcher::BestOffsetPrefetcher::addRecentRequest(Addr addr, Tick time)
     }
     recentRequests.push_back({addr, time});
 }
+<<<<<<< HEAD
 
 void
 TDTPrefetcher::BestOffsetPrefetcher::updateScores(Addr addr)
@@ -108,6 +112,13 @@ TDTPrefetcher::BestOffsetPrefetcher::updateScores(Addr addr)
 }
 
 
+=======
+void
+TDTPrefetcher::Best
+
+
+void
+>>>>>>> 395c4f7123 (Best_offset_prefetcher)
 TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
                                  std::vector<AddrPriority> &addresses,
                                     const CacheAccessor &cache)
