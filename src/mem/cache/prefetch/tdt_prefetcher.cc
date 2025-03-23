@@ -1,5 +1,5 @@
-#include "mem/cache/prefetch/tdt_prefetcher.hh"
 
+#include "mem/cache/prefetch/tdt_prefetcher.hh"
 #include "debug/HWPrefetch.hh"
 #include "mem/cache/replacement_policies/base.hh"
 #include "params/TDTPrefetcher.hh"
@@ -67,7 +67,6 @@ TDTPrefetcher::notifyFill(const CacheAccessProbeArg &arg)
 }
 
 void
-<<<<<<< HEAD
 TDTPrefetcher::BestOffsetPrefetcher::fillOffsetTable()
 {
     for (int i = 1; i <= 256; ++i) {
@@ -76,14 +75,12 @@ TDTPrefetcher::BestOffsetPrefetcher::fillOffsetTable()
         while (num % 3 == 0) num /= 3;
         while (num % 5 == 0) num /= 5;
         if (num == 1) {
-            offsetTable[i] = {i, 0};
+            offsetTable[i] = 0;
         }
     }
 }
 
 void
-=======
->>>>>>> 395c4f7123 (Best_offset_prefetcher)
 TDTPrefetcher::BestOffsetPrefetcher::addRecentRequest(Addr addr, Tick time)
 {
     if(recentRequests.size() >= maxRecentRequests)
@@ -92,7 +89,6 @@ TDTPrefetcher::BestOffsetPrefetcher::addRecentRequest(Addr addr, Tick time)
     }
     recentRequests.push_back({addr, time});
 }
-<<<<<<< HEAD
 
 void
 TDTPrefetcher::BestOffsetPrefetcher::updateScores(Addr addr)
@@ -111,14 +107,7 @@ TDTPrefetcher::BestOffsetPrefetcher::updateScores(Addr addr)
     }
 }
 
-
-=======
 void
-TDTPrefetcher::Best
-
-
-void
->>>>>>> 395c4f7123 (Best_offset_prefetcher)
 TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
                                  std::vector<AddrPriority> &addresses,
                                     const CacheAccessor &cache)
@@ -185,6 +174,7 @@ TDTPrefetcherHashedSetAssociative::extractTag(const Addr addr) const
 {
     return addr;
 }
+
 
 } // namespace prefetch
 } // namespace gem5
