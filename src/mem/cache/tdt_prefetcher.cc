@@ -59,25 +59,10 @@ TDTPrefetcher::allocateNewContext(int context)
     return *(pcTables[context]);
 }
 
-
 void
 TDTPrefetcher::notifyFill(const CacheAccessProbeArg &arg)
 {
     //A cache line has been filled in
-}
-
-void
-TDTPrefetcher::BestOffsetPrefetcher::fillOffsetTable()
-{
-    for (int i = 1; i <= 256; ++i) {
-        int num = i;
-        while (num % 2 == 0) num /= 2;
-        while (num % 3 == 0) num /= 3;
-        while (num % 5 == 0) num /= 5;
-        if (num == 1) {
-            offsetTable[i] = {i, 0};
-        }
-    }
 }
 
 void
@@ -89,25 +74,39 @@ TDTPrefetcher::BestOffsetPrefetcher::addRecentRequest(Addr addr, Tick time)
     }
     recentRequests.push_back({addr, time});
 }
-
 void
-TDTPrefetcher::BestOffsetPrefetcher::updateScores(Addr addr)
+TDTPrefetcher::BestOffsetPrefetcher::fillOffsetTable()
 {
-    for (auto &entry : offsetTable) {
-        entry.second = 0;
-    }
-
-    for (auto &request : recentRequests) {
-        Addr diff = request.first - addr;
-        for (auto &entry : offsetTable) {
-            if (diff % entry.first == 0) {
-                entry.second++;
+    for(int i = 1 ; i < 256; ++i)
+    {
+        bool isPrime = true;
+        for(int j = 1; j <= i; ++j)
+        {
+            int c = i % j;
+            if(c==0)
+            {
+                if(j > 5)
+                {
+                    isPrime = false;
+                    break;
+                }
             }
+        }
+        if(isPrime)
+        {
+            offsetTable[i] = {i, 0};
         }
     }
 }
 
 
+void
+TDTPrefetcher::BestOffsetPrefetcher::printOffsets() const
+{
+    for (const auto &entry : offsetTable) {
+        DPRINTF(HWPrefetch, "Offset: %d, Score: %d\n", entry.second.offset, entry.second.score);
+    }
+}
 TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
                                  std::vector<AddrPriority> &addresses,
                                     const CacheAccessor &cache)
