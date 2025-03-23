@@ -116,17 +116,14 @@ class BestOffsetPrefetcher
             Tick time;
         };
 
-        struct OffsetScore
-        {
-            int offset;
-            int score;
-        };
+   
 
         std::vector<RecentRequest> recentRequests;
-        std::unordered_map<int, OffsetScore> offsetTable;
-        int maxRecentRequests; //Size of the recentRequents table
-        int maxOffsets; //Size of the offset Table
+        std::unordered_map<int, int> offsetTable; //offset, score
+        int recentRequestSize; //Size of the recentRequents table
+        int offsetTableSize; //Size of the offset Table
         int maxScore;
+        int maxRound;
 
         public:
             BestOffsetPrefetcher(int maxRecentRequests, int maxOffsets)
