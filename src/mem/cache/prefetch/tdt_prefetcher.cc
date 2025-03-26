@@ -26,7 +26,7 @@ namespace gem5
 
     TDTPrefetcher::TDTPrefetcher(const TDTPrefetcherParams &params)
         : Queued(params),
-        bestOffsetPrefetcher(255, 256,31,20), 
+          bestOffsetPrefetcher(255, 256, 31, 20),
           pcTableInfo(params.table_assoc, params.table_entries,
                       params.table_indexing_policy,
                       params.table_replacement_policy)
@@ -61,29 +61,29 @@ namespace gem5
       return *(pcTables[context]);
     }
 
-    BestOffsetPrefetcher::BestOffsetPrefetcher(int recentRequestsSize, int maxScore, int maxRound)
-    : recentRequestSize(recentRequestsSize),
-      //offsetTableSize(offsetTableSize),
-      maxScore(maxScore),
-      maxRound(maxRound),
-      D(1),
-      currentRound(0)
-{
-    fillOffsetTable();
-}
+    BestOffsetPrefetcher::BestOffsetPrefetcher(int recentRequestsSize, int offsetTableSize, int maxScore, int maxRound)
+        : recentRequestSize(recentRequestsSize),
+          offsetTableSize(offsetTableSize),
+          maxScore(maxScore),
+          maxRound(maxRound),
+          D(1),
+          currentRound(0)
+    {
+      fillOffsetTable();
+    }
 
     void
     TDTPrefetcher::notifyFill(const CacheAccessProbeArg &arg)
     {
       // A cache line has been filled in
-      bestOffsetPrefetcher.addRecentRequest(arg.pkt->getAddr() - D);
+      bestOffsetPrefetcher.addRecentRequest(arg.pkt->getAddr() - bestOffsetPrefetcher.D * blkSize);
       // What if the current best offset (D) has changed while the cache fill was loading? Then the D would be wrong
     }
 
     void
-    TDTPrefetcher::BestOffsetPrefetcher::fillOffsetTable()
+    BestOffsetPrefetcher::fillOffsetTable()
     {
-      for (int i = 1; i <=  ++i)
+      for (int i = 1; i <= 256; ++i)
       {
         int num = i;
         while (num % 2 == 0)
@@ -98,57 +98,80 @@ namespace gem5
         }
       }
     }
-
-    void
-    TDTPrefetcher::BestOffsetPrefetcher::addRecentRequest(Addr addr)
+    uint32_t 
+    BestOffsetPrefetcher::computeRRTableIndex(Addr address)
     {
-      if (recentRequests.size() >= recentRequestSize)
-      {
-        recentRequests.pop_front();
-      }
-      recentRequests.push_back({addr});
+      // For a 256-entry RR table, we need 8 bits for the index
+      // Extract the 8 least significant line address bits
+      uint32_t lowerBits = (address >> 6) & 0xFF; // Bits 6-13
+
+      // Extract the next 8 bits
+      uint32_t upperBits = (address >> 14) & 0xFF; // Bits 14-21
+
+      // XOR the two sets of bits to get the index
+      return lowerBits ^ upperBits;
+    }
+    // Function to extract the 12-bit tag
+    uint32_t 
+    BestOffsetPrefetcher::extractTag(Addr address)
+    {
+      // Skip the 8 least significant line address bits
+      // Extract the next 12 bits
+      return (address >> 14) & 0xFFF; // Bits 14-25
     }
 
     void
-    TDTPrefetcher::BestOffsetPrefetcher::testRecentRequest(Addr addrRequest, int testOffset)
+    BestOffsetPrefetcher::addRecentRequest(Addr address)
     {
-      int testAdress = addrRequest - testOffset; // X -d
-      for (auto &i : recentRequests)
+      //We're supposed to just put the tag in the RR, but leaving it for now.
+      uint32_t index = computeRRTableIndex(address);
+      recentRequests[index] = address;
+    }
+
+    void
+    BestOffsetPrefetcher::testRecentRequest(Addr addrRequest, int testOffset)
+    {
+      int testAddress = addrRequest - (testOffset *blkSize); // X -d
+      uint32_t index = computeRRTableIndex(testAddress);
+
+      // Check if the entry at this index matches the test address
+      if (recentRequests[index] == testAddress)
       {
-        if (testAdress == i.addr)
+        offsetTable[testOffset]++;
+        if (offsetTable[testOffset] == maxScore)
         {
-          offsetTable[testOffset]++;
-          if(offsetTable[testOffset] == maxScore){
-            endLearningRound(testOffset);
-          }
+          endLearningRound(testOffset);
         }
       }
     }
 
-    
     void
-    TDTPrefetcher::BestOffsetPrefetcher::endLearningRound(int newBestoffset){
-      //if newBestOffset is 0, roundMax was reached
-      if(newBestoffset == 0){
+    BestOffsetPrefetcher::endLearningRound(int newBestoffset)
+    {
+      // if newBestOffset is 0, roundMax was reached
+      if (newBestoffset == 0)
+      {
         int highestValue = 0;
 
-        for( auto &i: bestOffsetPrefetcher.offsetTable){
-          if(i.second > highestValue){
+        for (auto &i : offsetTable)
+        {
+          if (i.second > highestValue)
+          {
             highestValue = i.second;
           }
         }
 
-        newBestoffset = bestOffsetPrefetcher.offsetTable[highestValue];
+        newBestoffset = offsetTable[highestValue];
       }
-      bestOffsetPrefetcher.D = newBestoffset;
+      D = newBestoffset;
 
-      //reset offsTable
-      for(auto &i: bestOffsetPrefetcher.offsetTable){
+      // reset offsTable
+      for (auto &i : offsetTable)
+      {
         i.second = 0;
       }
-      
+      currentRound = 0;
     }
-
 
     void
     TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
@@ -165,21 +188,19 @@ namespace gem5
       Addr access_addr = pfi.getAddr();
 
       // test one offset from the offset table, iterating each time calculatePrefetech is called
-      static auto it = offsetTable.begin();
-      if (it != offsetTable.end())
+      static auto it = bestOffsetPrefetcher.offsetTable.begin();
+      if (it != bestOffsetPrefetcher.offsetTable.end())
       {
         bestOffsetPrefetcher.testRecentRequest(access_addr, it->first);
         ++it;
       }
       else
       {
-        it = offsetTable.begin();
-        currentRound++;
+        it = bestOffsetPrefetcher.offsetTable.begin();
+        bestOffsetPrefetcher.currentRound++;
         bestOffsetPrefetcher.testRecentRequest(access_addr, it->first);
         ++it;
       }
-
-      
 
       // access pc is the pc of the inst that requests the cache line
       Addr access_pc = pfi.getPC();
@@ -189,13 +210,12 @@ namespace gem5
 
       // Currently implemented prefetching algorithm: Next line prefetching
       // TODO: Implement something better!
-      addresses.push_back(AddrPriority(access_addr + (D * blksize), 0));
+      addresses.push_back(AddrPriority(access_addr + (bestOffsetPrefetcher.D * blkSize), 0));
 
-
-      if(currentRound == maxRound){
+      if (bestOffsetPrefetcher.currentRound == bestOffsetPrefetcher.maxRound)
+      {
         bestOffsetPrefetcher.endLearningRound(0);
       }
-      
 
       // Can safely be ignored
       // Get matching storage of entries

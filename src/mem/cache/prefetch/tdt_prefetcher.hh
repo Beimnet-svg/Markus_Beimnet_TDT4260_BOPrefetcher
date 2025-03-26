@@ -113,8 +113,9 @@ class BestOffsetPrefetcher
 private:
     Addr addr; // If this is needed
     
-    std::vector<Addr> recentRequests;
+    std::unordered_map<uint32_t,Addr> recentRequests;
     std::unordered_map<int, int> offsetTable; // offset, score
+    int offsetTableSize;
     int recentRequestSize; 
     int maxScore;
     int maxRound;
@@ -123,12 +124,12 @@ private:
 
 public:
     
-    BestOffsetPrefetcher(int recentRequestsSize, int offsetTableSize);
+    BestOffsetPrefetcher(int recentRequestsSize, int offsetTableSize, int maxScore, int maxRound);
     
     void fillOffsetTable();
     void addRecentRequest(Addr addr);
     void testRecentRequest(Addr addrRequest, int testOffset);
-    void updateOffsetScore(int offset, int score);
+    //void updateOffsetScore(int offset, int score);
     void endLearningRound(int newBestoffset);
     int getBestOffset() const { return D; }
     // void printOffsets() const; // Method to print offsets
