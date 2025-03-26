@@ -110,22 +110,21 @@ class TDTPrefetcher : public Queued
 class BestOffsetPrefetcher
 {
     private:
-        struct RecentRequest
-        {
+        
+        
             Addr addr;
             
-        };
+        
 
    
 
-        std::vector<RecentRequest> recentRequests;
+        std::vector<Addr> recentRequests;
         std::unordered_map<int, int> offsetTable; //offset, score
         int recentRequestSize; 
         //int offsetTableSize; 
         int maxScore;
         int maxRound;
         int currentRound;
-        int d;
         int D;
 
 
@@ -134,9 +133,9 @@ class BestOffsetPrefetcher
              :  recentRequestSize(255),
                 //offsetTableSize()
                 maxScore(31),
-                maxRound(8),
-                D(1)
-                currentRound(0);
+                maxRound(20),
+                D(1),
+                currentRound(0),
              {
                 fillOffsetTable();
              }
@@ -144,10 +143,10 @@ class BestOffsetPrefetcher
              void addRecentRequest(Addr addr);
              void testRecentRequest(Addr addrRequest, int testOffset);
              void updateOffsetScore(int offset, int score);
-             int getBestOffset() const {return D};
-             void printOffsets() const; //Method to print offsets
+             int getBestOffset() const {return D;}
+            // void printOffsets() const; //Method to print offsets
 
 };
 
 
-#endif //_MEM_CACHE_PREFETCH_TDT_PREFETCHER_HH__
+#endif  //__MEM_CACHE_PREFETCH_TDT_PREFETCHER_HH__

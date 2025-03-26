@@ -90,7 +90,7 @@ namespace gem5
     void
     TDTPrefetcher::BestOffsetPrefetcher::addRecentRequest(Addr addr)
     {
-      if (recentRequests.size() >= maxRecentRequests)
+      if (recentRequests.size() >= recentRequestSize)
       {
         recentRequests.pop_front();
       }
@@ -112,6 +112,8 @@ namespace gem5
         }
       }
     }
+
+    
     void
     TDTPrefetcher::BestOffsetPrefetcher::endLearningRound(int newBestoffset){
       //if newBestOffset is 0, roundMax was reached
@@ -134,6 +136,7 @@ namespace gem5
       }
       
     }
+
 
     void
     TDTPrefetcher::calculatePrefetch(const PrefetchInfo &pfi,
