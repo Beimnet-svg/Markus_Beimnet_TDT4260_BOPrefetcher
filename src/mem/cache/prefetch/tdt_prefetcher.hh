@@ -49,7 +49,7 @@ class TDTPrefetcher : public Queued
 {
 
   protected:
-
+   BestOffsetPrefetcher bestOffsetPrefetcher;
     const struct PCTableInfo
     {
         const int assoc;
@@ -102,6 +102,7 @@ class TDTPrefetcher : public Queued
     void calculatePrefetch(const PrefetchInfo &pf1,
                            std::vector<AddrPriority> &addresses,
                            const CacheAccessor &cache) override;
+                           
 
 };
 
@@ -109,44 +110,31 @@ class TDTPrefetcher : public Queued
 //Here we will create a class that will be used to include Recent requests table
 class BestOffsetPrefetcher
 {
-    private:
-        
-        
-            Addr addr;
-            
-        
+private:
+    Addr addr; // If this is needed
+    
+    std::vector<Addr> recentRequests;
+    std::unordered_map<int, int> offsetTable; // offset, score
+    int recentRequestSize; 
+    int maxScore;
+    int maxRound;
+    int currentRound;
+    int D;
 
-   
+public:
+    
+    BestOffsetPrefetcher(int recentRequestsSize, int offsetTableSize);
+    
+    void fillOffsetTable();
+    void addRecentRequest(Addr addr);
+    void testRecentRequest(Addr addrRequest, int testOffset);
+    void updateOffsetScore(int offset, int score);
+    void endLearningRound(int newBestoffset);
+    int getBestOffset() const { return D; }
+    // void printOffsets() const; // Method to print offsets
 
-        std::vector<Addr> recentRequests;
-        std::unordered_map<int, int> offsetTable; //offset, score
-        int recentRequestSize; 
-        //int offsetTableSize; 
-        int maxScore;
-        int maxRound;
-        int currentRound;
-        int D;
-
-
-        public:
-            BestOffsetPrefetcher(int recentRequestsSize, int offsetTableSize)
-             :  recentRequestSize(255),
-                //offsetTableSize()
-                maxScore(31),
-                maxRound(20),
-                D(1),
-                currentRound(0),
-             {
-                fillOffsetTable();
-             }
-             void fillOffsetTable();
-             void addRecentRequest(Addr addr);
-             void testRecentRequest(Addr addrRequest, int testOffset);
-             void updateOffsetScore(int offset, int score);
-             int getBestOffset() const {return D;}
-            // void printOffsets() const; //Method to print offsets
-
+    // Add friend declaration to allow TDTPrefetcher access
+    friend class TDTPrefetcher;
 };
-
 
 #endif  //__MEM_CACHE_PREFETCH_TDT_PREFETCHER_HH__

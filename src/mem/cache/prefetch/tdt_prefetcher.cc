@@ -26,6 +26,7 @@ namespace gem5
 
     TDTPrefetcher::TDTPrefetcher(const TDTPrefetcherParams &params)
         : Queued(params),
+        bestOffsetPrefetcher(255, 256,31,20), 
           pcTableInfo(params.table_assoc, params.table_entries,
                       params.table_indexing_policy,
                       params.table_replacement_policy)
@@ -60,18 +61,29 @@ namespace gem5
       return *(pcTables[context]);
     }
 
+    BestOffsetPrefetcher::BestOffsetPrefetcher(int recentRequestsSize, int maxScore, int maxRound)
+    : recentRequestSize(recentRequestsSize),
+      //offsetTableSize(offsetTableSize),
+      maxScore(maxScore),
+      maxRound(maxRound),
+      D(1),
+      currentRound(0)
+{
+    fillOffsetTable();
+}
+
     void
     TDTPrefetcher::notifyFill(const CacheAccessProbeArg &arg)
     {
       // A cache line has been filled in
-      addRecentRequest(arg.pkt->getAddr() - D);
+      bestOffsetPrefetcher.addRecentRequest(arg.pkt->getAddr() - D);
       // What if the current best offset (D) has changed while the cache fill was loading? Then the D would be wrong
     }
 
     void
     TDTPrefetcher::BestOffsetPrefetcher::fillOffsetTable()
     {
-      for (int i = 1; i <= 256; ++i)
+      for (int i = 1; i <=  ++i)
       {
         int num = i;
         while (num % 2 == 0)
@@ -120,18 +132,18 @@ namespace gem5
       if(newBestoffset == 0){
         int highestValue = 0;
 
-        for( auto &i: offsetTable){
+        for( auto &i: bestOffsetPrefetcher.offsetTable){
           if(i.second > highestValue){
             highestValue = i.second;
           }
         }
 
-        newBestoffset = offsetTable[highestValue];
+        newBestoffset = bestOffsetPrefetcher.offsetTable[highestValue];
       }
-      D = newBestoffset;
+      bestOffsetPrefetcher.D = newBestoffset;
 
       //reset offsTable
-      for(auto &i: offsetTable){
+      for(auto &i: bestOffsetPrefetcher.offsetTable){
         i.second = 0;
       }
       
@@ -156,14 +168,14 @@ namespace gem5
       static auto it = offsetTable.begin();
       if (it != offsetTable.end())
       {
-        testRecentRequest(access_addr, it->first);
+        bestOffsetPrefetcher.testRecentRequest(access_addr, it->first);
         ++it;
       }
       else
       {
         it = offsetTable.begin();
         currentRound++;
-        testRecentRequest(access_addr, it->first);
+        bestOffsetPrefetcher.testRecentRequest(access_addr, it->first);
         ++it;
       }
 
@@ -181,7 +193,7 @@ namespace gem5
 
 
       if(currentRound == maxRound){
-        endLearningRound(0);
+        bestOffsetPrefetcher.endLearningRound(0);
       }
       
 
