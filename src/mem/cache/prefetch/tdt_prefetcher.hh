@@ -26,9 +26,45 @@ namespace replacement_policy
 
 struct TDTPrefetcherParams;
 
+
+
 GEM5_DEPRECATED_NAMESPACE(Prefetcher, prefetch);
 namespace prefetch
 {
+
+//Implementation of Best Offset Prefetcher
+//Here we will create a class that will be used to include Recent requests table
+class BestOffsetPrefetcher
+{
+private:
+    Addr addr; // If this is needed
+    
+    std::vector<Addr> recentRequests;
+    std::unordered_map<int, int> offsetTable; // offset, score
+    int offsetTableSize;
+    int recentRequestSize; 
+    int maxScore;
+    int maxRound;
+    int currentRound;
+    int D;
+
+public:
+    
+    BestOffsetPrefetcher(int recentRequestsSize, int offsetTableSize, int maxScore, int maxRound);
+    
+    void fillOffsetTable();
+    void addRecentRequest(Addr addr);
+    void testRecentRequest(Addr addrRequest, int testOffset, int blkSize);
+    uint32_t computeRRTableIndex(Addr address);
+    uint32_t extractTag(Addr address);
+    //void updateOffsetScore(int offset, int score);
+    void endLearningRound(int newBestoffset);
+    int getBestOffset() const { return D; }
+    // void printOffsets() const; // Method to print offsets
+
+    // Add friend declaration to allow TDTPrefetcher access
+    friend class TDTPrefetcher;
+};
 
 class TDTPrefetcherHashedSetAssociative : public TaggedSetAssociative
 {
@@ -106,36 +142,7 @@ class TDTPrefetcher : public Queued
 
 };
 
-//Implementation of Best Offset Prefetcher
-//Here we will create a class that will be used to include Recent requests table
-class BestOffsetPrefetcher
-{
-private:
-    Addr addr; // If this is needed
-    
-    std::unordered_map<uint32_t,Addr> recentRequests;
-    std::unordered_map<int, int> offsetTable; // offset, score
-    int offsetTableSize;
-    int recentRequestSize; 
-    int maxScore;
-    int maxRound;
-    int currentRound;
-    int D;
-
-public:
-    
-    BestOffsetPrefetcher(int recentRequestsSize, int offsetTableSize, int maxScore, int maxRound);
-    
-    void fillOffsetTable();
-    void addRecentRequest(Addr addr);
-    void testRecentRequest(Addr addrRequest, int testOffset);
-    //void updateOffsetScore(int offset, int score);
-    void endLearningRound(int newBestoffset);
-    int getBestOffset() const { return D; }
-    // void printOffsets() const; // Method to print offsets
-
-    // Add friend declaration to allow TDTPrefetcher access
-    friend class TDTPrefetcher;
-};
+}
+}
 
 #endif  //__MEM_CACHE_PREFETCH_TDT_PREFETCHER_HH__

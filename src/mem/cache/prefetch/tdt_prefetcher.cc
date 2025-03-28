@@ -62,12 +62,12 @@ namespace gem5
     }
 
     BestOffsetPrefetcher::BestOffsetPrefetcher(int recentRequestsSize, int offsetTableSize, int maxScore, int maxRound)
-        : recentRequestSize(recentRequestsSize),
-          offsetTableSize(offsetTableSize),
+    :offsetTableSize(offsetTableSize),
+     recentRequestSize(recentRequestsSize),
           maxScore(maxScore),
           maxRound(maxRound),
-          D(1),
-          currentRound(0)
+          currentRound(0),  
+          D(1)
     {
       fillOffsetTable();
     }
@@ -129,9 +129,9 @@ namespace gem5
     }
 
     void
-    BestOffsetPrefetcher::testRecentRequest(Addr addrRequest, int testOffset)
+    BestOffsetPrefetcher::testRecentRequest(Addr addrRequest, int testOffset,int blkSize)
     {
-      int testAddress = addrRequest - (testOffset *blkSize); // X -d
+      int testAddress = addrRequest - (testOffset * blkSize); // X -d
       uint32_t index = computeRRTableIndex(testAddress);
 
       // Check if the entry at this index matches the test address
@@ -191,14 +191,14 @@ namespace gem5
       static auto it = bestOffsetPrefetcher.offsetTable.begin();
       if (it != bestOffsetPrefetcher.offsetTable.end())
       {
-        bestOffsetPrefetcher.testRecentRequest(access_addr, it->first);
+        bestOffsetPrefetcher.testRecentRequest(access_addr, it->first,blkSize);
         ++it;
       }
       else
       {
         it = bestOffsetPrefetcher.offsetTable.begin();
         bestOffsetPrefetcher.currentRound++;
-        bestOffsetPrefetcher.testRecentRequest(access_addr, it->first);
+        bestOffsetPrefetcher.testRecentRequest(access_addr, it->first,blkSize);
         ++it;
       }
 
