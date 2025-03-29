@@ -63,11 +63,12 @@ namespace gem5
 
     BestOffsetPrefetcher::BestOffsetPrefetcher(int recentRequestsSize, int offsetTableSize, int maxScore, int maxRound)
     :offsetTableSize(offsetTableSize),
-     recentRequestSize(recentRequestsSize),
+          recentRequestsSize(recentRequestsSize),
           maxScore(maxScore),
           maxRound(maxRound),
           currentRound(0),  
-          D(1)
+          D(1),
+          recentRequests(recentRequestsSize, 0) 
     {
       fillOffsetTable();
     }
@@ -152,16 +153,18 @@ namespace gem5
       if (newBestoffset == 0)
       {
         int highestValue = 0;
+        int bestOffset = 0;
 
         for (auto &i : offsetTable)
         {
           if (i.second > highestValue)
           {
+            bestOffset = i.first;
             highestValue = i.second;
           }
         }
 
-        newBestoffset = offsetTable[highestValue];
+        newBestoffset = bestOffset;
       }
       D = newBestoffset;
 

@@ -50,7 +50,7 @@ private:
 
 public:
     
-    BestOffsetPrefetcher(int recentRequestsSize, int offsetTableSize, int maxScore, int maxRound);
+    BestOffsetPrefetcher(int recentRequestSize, int offsetTableSize, int maxScore, int maxRound);
     
     void fillOffsetTable();
     void addRecentRequest(Addr addr);
