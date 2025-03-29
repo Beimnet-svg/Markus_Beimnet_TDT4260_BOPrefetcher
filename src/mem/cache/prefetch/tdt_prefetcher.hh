@@ -42,7 +42,7 @@ private:
     std::vector<Addr> recentRequests;
     std::unordered_map<int, int> offsetTable; // offset, score
     int offsetTableSize;
-    int recentRequestSize; 
+    int recentRequestsSize; 
     int maxScore;
     int maxRound;
     int currentRound;
@@ -50,7 +50,7 @@ private:
 
 public:
     
-    BestOffsetPrefetcher(int recentRequestSize, int offsetTableSize, int maxScore, int maxRound);
+    BestOffsetPrefetcher(int recentRequestsSize, int offsetTableSize, int maxScore, int maxRound);
     
     void fillOffsetTable();
     void addRecentRequest(Addr addr);

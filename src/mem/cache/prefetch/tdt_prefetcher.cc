@@ -62,13 +62,13 @@ namespace gem5
     }
 
     BestOffsetPrefetcher::BestOffsetPrefetcher(int recentRequestsSize, int offsetTableSize, int maxScore, int maxRound)
-    :offsetTableSize(offsetTableSize),
-          recentRequestsSize(recentRequestsSize),
+    :     recentRequests(recentRequestsSize),
+          offsetTable(offsetTableSize),
           maxScore(maxScore),
           maxRound(maxRound),
           currentRound(0),  
-          D(1),
-          recentRequests(recentRequestsSize, 0) 
+          D(1)
+          
     {
       fillOffsetTable();
     }
@@ -77,14 +77,14 @@ namespace gem5
     TDTPrefetcher::notifyFill(const CacheAccessProbeArg &arg)
     {
       // A cache line has been filled in
-      bestOffsetPrefetcher.addRecentRequest(arg.pkt->getAddr() - bestOffsetPrefetcher.D * blkSize);
+      bestOffsetPrefetcher.addRecentRequest(arg.pkt->getAddr() - (bestOffsetPrefetcher.D * blkSize));
       // What if the current best offset (D) has changed while the cache fill was loading? Then the D would be wrong
     }
 
     void
     BestOffsetPrefetcher::fillOffsetTable()
     {
-      for (int i = 1; i <= 256; ++i)
+    /*   for (int i = 1; i <= 256; ++i)
       {
         int num = i;
         while (num % 2 == 0)
@@ -97,8 +97,14 @@ namespace gem5
         {
           offsetTable[i] = 0;
         }
-      }
+      } */
+     std::vector<int> offsets = {1,2,3,4,5,6,8,9,10,12,15,16,18,20,24,25,27,30,32,36,40,45,48,50,54,60,64,72,75,80,81,90,96,100,108,120,125,128,135,144,150,160,162,180,192,200,216,225,240,243,250,256};
+     for (int offset : offsets)
+     {
+         offsetTable[offset] = 0;
+     }
     }
+     
     uint32_t 
     BestOffsetPrefetcher::computeRRTableIndex(Addr address)
     {
@@ -130,9 +136,9 @@ namespace gem5
     }
 
     void
-    BestOffsetPrefetcher::testRecentRequest(Addr addrRequest, int testOffset,int blkSize)
+    BestOffsetPrefetcher::testRecentRequest(Addr addrRequest, int testOffset, int blkSize)
     {
-      int testAddress = addrRequest - (testOffset * blkSize); // X -d
+      Addr testAddress = addrRequest - (testOffset * blkSize); // X -d
       uint32_t index = computeRRTableIndex(testAddress);
 
       // Check if the entry at this index matches the test address
